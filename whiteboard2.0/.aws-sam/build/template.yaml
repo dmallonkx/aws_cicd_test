@@ -1,0 +1,63 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: whiteboard2.0
+Transform:
+- AWS::Serverless-2016-10-31
+Resources:
+  BoardMessagesTableDonal:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: board-messages-table-donal
+      AttributeDefinitions:
+      - AttributeName: partKey
+        AttributeType: S
+      - AttributeName: createdAt
+        AttributeType: N
+      KeySchema:
+      - AttributeName: partKey
+        KeyType: HASH
+      - AttributeName: createdAt
+        KeyType: RANGE
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5
+  BoardHttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: Test
+      CorsConfiguration: true
+  PostMessageFunctionDonal:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/postMessage.handler
+      Runtime: nodejs12.x
+      MemorySize: 128
+      Timeout: 5
+      Events:
+        PostMessage:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: BoardHttpApi
+            Method: POST
+            Path: /messages
+      Policies:
+      - AmazonDynamoDBFullAccess
+      CodeUri: PostMessageFunctionDonal
+  GetMessagesFunctionDonal:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: src/handlers/getMessages.handler
+      Runtime: nodejs12.x
+      MemorySize: 128
+      Timeout: 5
+      Events:
+        GetMessages:
+          Type: HttpApi
+          Properties:
+            ApiId:
+              Ref: BoardHttpApi
+            Method: GET
+            Path: /messages
+      Policies:
+      - AmazonDynamoDBFullAccess
+      CodeUri: GetMessagesFunctionDonal
